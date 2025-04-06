@@ -41,6 +41,10 @@ import ProfileScreen from "../screens/profile/ProfileScreen";
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
 import SettingsScreen from "../screens/profile/SettingsScreen";
 
+import EventsScreen from "../screens/events/EventsScreen";
+import EventDetailsScreen from "../screens/events/EventDetailsScreen";
+import EventCalendarScreen from "../screens/events/EventCalendarScreen";
+
 // Create navigation containers
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

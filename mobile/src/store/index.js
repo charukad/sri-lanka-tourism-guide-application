@@ -5,6 +5,7 @@ import itineraryReducer from "./slices/itinerarySlice";
 import guideReducer from "./slices/guideSlice";
 import vehicleReducer from "./slices/vehicleSlice";
 import socialReducer from "./slices/socialSlice";
+import eventReducer from "./slices/eventSlice";
 
 // Create the root reducer with our auth and itinerary slices
 const rootReducer = combineReducers({
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   guides: guideReducer,
   vehicles: vehicleReducer,
   social: socialReducer,
+  events: eventReducer,
 
   // Add other reducers here
 });
