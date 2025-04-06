@@ -1,78 +1,139 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Image,
   TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { MaterialIcons } from "@expo/vector-icons";
+import {
+  fetchPosts,
+  likePost,
+  unlikePost,
+} from "../../store/slices/socialSlice";
 
-const dummyPosts = [
-  {
-    id: "1",
-    user: { name: "Jane Smith", avatar: "https://via.placeholder.com/50" },
-    location: "Sigiriya Rock Fortress",
-    content: "Breathtaking view from the top of Sigiriya!",
-    image: "https://via.placeholder.com/400x300",
-    likes: 24,
-    comments: 5,
-    timestamp: "2 hours ago",
-  },
-  {
-    id: "2",
-    user: { name: "Mike Johnson", avatar: "https://via.placeholder.com/50" },
-    location: "Galle Fort",
-    content: "Exploring the historic Galle Fort. Amazing architecture!",
-    image: "https://via.placeholder.com/400x300",
-    likes: 18,
-    comments: 3,
-    timestamp: "5 hours ago",
-  },
-];
+// Components
+import PostCard from "../../components/social/PostCard";
 
-const FeedScreen = () => {
-  const renderItem = ({ item }) => (
-    <View style={styles.postCard}>
-      <View style={styles.postHeader}>
-        <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
-        <View>
-          <Text style={styles.userName}>{item.user.name}</Text>
-          <Text style={styles.location}>{item.location}</Text>
-        </View>
-      </View>
-      <Image source={{ uri: item.image }} style={styles.postImage} />
-      <View style={styles.postActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="favorite-border" size={24} color="black" />
-          <Text style={styles.actionText}>{item.likes}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="comment" size={24} color="black" />
-          <Text style={styles.actionText}>{item.comments}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="share" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.content}>{item.content}</Text>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
-    </View>
+const FeedScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const { posts, loading } = useSelector((state) => state.social);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch posts when component mounts
+  useEffect(() => {
+    dispatch(fetchPosts());
+  }, [dispatch]);
+
+  // Handle pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await dispatch(fetchPosts());
+    setRefreshing(false);
+  };
+
+  // Navigate to post detail screen
+  const handlePostPress = (post) => {
+    navigation.navigate("PostDetails", { postId: post.id });
+  };
+
+  // Handle like/unlike post
+  const handleLikePress = (post, isLiked) => {
+    if (isLiked) {
+      dispatch(unlikePost({ postId: post.id }));
+    } else {
+      dispatch(likePost({ postId: post.id }));
+    }
+  };
+
+  // Handle comment press
+  const handleCommentPress = (post) => {
+    navigation.navigate("PostDetails", { postId: post.id, focusComment: true });
+  };
+
+  // Handle location press
+  const handleLocationPress = (location) => {
+    navigation.navigate("ExploreTab", {
+      screen: "ExploreMap",
+      params: {
+        focusLocation: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          name: location.name,
+        },
+      },
+    });
+  };
+
+  // Handle user profile press
+  const handleProfilePress = (userId, userName) => {
+    navigation.navigate("UserProfile", { userId, userName });
+  };
+
+  // Render post item
+  const renderPostItem = ({ item }) => (
+    <PostCard
+      post={item}
+      onPostPress={() => handlePostPress(item)}
+      onLikePress={handleLikePress}
+      onCommentPress={() => handleCommentPress(item)}
+      onLocationPress={() => handleLocationPress(item.location)}
+      onProfilePress={() => handleProfilePress(item.userId, item.userName)}
+    />
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Travel Feed</Text>
-      <FlatList
-        data={dummyPosts}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-      />
-      <TouchableOpacity style={styles.addButton}>
-        <MaterialIcons name="add" size={30} color="white" />
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Travel Feed</Text>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => navigation.navigate("CreatePost")}
+        >
+          <MaterialIcons name="add" size={24} color="#0066cc" />
+        </TouchableOpacity>
+      </View>
+
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066cc" />
+          <Text style={styles.loadingText}>Loading posts...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          renderItem={renderPostItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.feedList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#0066cc"]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <MaterialIcons name="photo-library" size={60} color="#ccc" />
+              <Text style={styles.emptyStateTitle}>No posts yet</Text>
+              <Text style={styles.emptyStateText}>
+                Be the first to share your Sri Lanka travel experience!
+              </Text>
+              <TouchableOpacity
+                style={styles.createPostButton}
+                onPress={() => navigation.navigate("CreatePost")}
+              >
+                <Text style={styles.createPostButtonText}>Create Post</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -80,78 +141,74 @@ const FeedScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8f9fa",
   },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    padding: 15,
-    marginTop: 30,
-  },
-  list: {
-    padding: 10,
-  },
-  postCard: {
-    backgroundColor: "white",
-    borderRadius: 10,
-    marginBottom: 15,
-    overflow: "hidden",
-  },
-  postHeader: {
+  header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
+    paddingTop: 50,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eeeeee",
   },
-  avatar: {
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  createButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 10,
-  },
-  userName: {
-    fontWeight: "bold",
-  },
-  location: {
-    color: "gray",
-    fontSize: 12,
-  },
-  postImage: {
-    width: "100%",
-    height: 300,
-  },
-  postActions: {
-    flexDirection: "row",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 15,
-  },
-  actionText: {
-    marginLeft: 5,
-  },
-  content: {
-    padding: 10,
-  },
-  timestamp: {
-    padding: 10,
-    color: "gray",
-    fontSize: 12,
-  },
-  addButton: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    backgroundColor: "#0066cc",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5,
+  },
+  feedList: {
+    paddingBottom: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
+    marginTop: 50,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  createPostButton: {
+    backgroundColor: "#0066cc",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+  },
+  createPostButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
