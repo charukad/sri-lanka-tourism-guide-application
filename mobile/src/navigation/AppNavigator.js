@@ -25,6 +25,10 @@ import AddToItineraryScreen from "../screens/itinerary/AddToItineraryScreen";
 // Import other screens
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import GuidesScreen from "../screens/guides/GuidesScreen";
+import GuideDetailsScreen from "../screens/guides/GuideDetailsScreen";
+import BookGuideScreen from "../screens/guides/BookGuideScreen";
+import MyBookingsScreen from "../screens/guides/MyBookingsScreen";
 
 // Create navigation containers
 const Stack = createStackNavigator();
@@ -32,6 +36,7 @@ const Tab = createBottomTabNavigator();
 const ExploreStack = createStackNavigator();
 const ItineraryStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
+const GuidesStack = createStackNavigator();
 
 // Placeholder component for screens that haven't been built yet
 const PlaceholderScreen = ({ route }) => (
