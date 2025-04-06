@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
-import authSlice from "./slices/authSlice";
+import authReducer from "./slices/authSlice";
+import itineraryReducer from "./slices/itinerarySlice";
 
-// Create the root reducer with our auth slice
+// Create the root reducer with our auth and itinerary slices
 const rootReducer = combineReducers({
-  auth: authSlice.reducer,
-  // You'll add more reducers here as you develop them
+  auth: authReducer,
+  itinerary: itineraryReducer,
+  // Add other reducers here
 });
 
 export const store = configureStore({
