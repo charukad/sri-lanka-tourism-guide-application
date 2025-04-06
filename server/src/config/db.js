@@ -10,7 +10,7 @@ const connectDB = async () => {
       useCreateIndex: true,
       useFindAndModify: false,
       // Add retry options
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 5005,
       socketTimeoutMS: 45000,
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
