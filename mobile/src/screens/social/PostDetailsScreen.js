@@ -91,10 +91,10 @@ const PostDetailsScreen = ({ route, navigation }) => {
     dispatch(
       addComment({
         postId,
-        userId: user.id, // In a real app, get this from auth state
-        userName: user.name || "Current User", // In a real app, get this from auth state
+        userId: user?.id || "u1", // In a real app, get this from auth state
+        userName: user?.name || "Current User", // In a real app, get this from auth state
         userAvatar:
-          user.avatar || "https://randomuser.me/api/portraits/men/1.jpg", // Default avatar
+          user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg", // Default avatar
         content: commentText.trim(),
       })
     );
@@ -166,41 +166,51 @@ const PostDetailsScreen = ({ route, navigation }) => {
       >
         {/* Post header with user info */}
         <View style={styles.postHeader}>
-          <Image
-            source={{ uri: currentPost.userAvatar }}
-            style={styles.userAvatar}
-          />
-          <View style={styles.headerInfo}>
-            <Text style={styles.userName}>{currentPost.userName}</Text>
-            <View style={styles.postMeta}>
-              <Text style={styles.timeText}>
-                {formatDate(currentPost.createdAt)}
-              </Text>
-              {currentPost.location && (
-                <>
-                  <Text style={styles.metaDot}>•</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      navigation.navigate("ExploreTab", {
-                        screen: "ExploreMap",
-                        params: {
-                          focusLocation: {
-                            latitude: currentPost.location.latitude,
-                            longitude: currentPost.location.longitude,
-                            name: currentPost.location.name,
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("UserProfile", {
+                userId: currentPost.userId,
+                userName: currentPost.userName,
+              })
+            }
+            style={styles.userInfoContainer}
+          >
+            <Image
+              source={{ uri: currentPost.userAvatar }}
+              style={styles.userAvatar}
+            />
+            <View style={styles.headerInfo}>
+              <Text style={styles.userName}>{currentPost.userName}</Text>
+              <View style={styles.postMeta}>
+                <Text style={styles.timeText}>
+                  {formatDate(currentPost.createdAt)}
+                </Text>
+                {currentPost.location && (
+                  <>
+                    <Text style={styles.metaDot}>•</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        navigation.navigate("Explore", {
+                          screen: "ExploreMap",
+                          params: {
+                            focusLocation: {
+                              latitude: currentPost.location.latitude,
+                              longitude: currentPost.location.longitude,
+                              name: currentPost.location.name,
+                            },
                           },
-                        },
-                      });
-                    }}
-                  >
-                    <Text style={styles.locationText}>
-                      {currentPost.location.name}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                        });
+                      }}
+                    >
+                      <Text style={styles.locationText}>
+                        {currentPost.location.name}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Post content */}
@@ -295,10 +305,19 @@ const PostDetailsScreen = ({ route, navigation }) => {
           ) : (
             comments.map((comment) => (
               <View key={comment.id} style={styles.commentItem}>
-                <Image
-                  source={{ uri: comment.userAvatar }}
-                  style={styles.commentAvatar}
-                />
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("UserProfile", {
+                      userId: comment.userId,
+                      userName: comment.userName,
+                    })
+                  }
+                >
+                  <Image
+                    source={{ uri: comment.userAvatar }}
+                    style={styles.commentAvatar}
+                  />
+                </TouchableOpacity>
                 <View style={styles.commentContent}>
                   <View style={styles.commentBubble}>
                     <Text style={styles.commentUserName}>
@@ -416,9 +435,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   postHeader: {
-    flexDirection: "row",
     padding: 15,
     backgroundColor: "white",
+  },
+  userInfoContainer: {
+    flexDirection: "row",
   },
   userAvatar: {
     width: 40,

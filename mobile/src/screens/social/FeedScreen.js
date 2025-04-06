@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -37,11 +36,6 @@ const FeedScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // Navigate to post detail screen
-  const handlePostPress = (post) => {
-    navigation.navigate("PostDetails", { postId: post.id });
-  };
-
   // Handle like/unlike post
   const handleLikePress = (post, isLiked) => {
     if (isLiked) {
@@ -51,39 +45,34 @@ const FeedScreen = ({ navigation }) => {
     }
   };
 
-  // Handle comment press
-  const handleCommentPress = (post) => {
-    navigation.navigate("PostDetails", { postId: post.id, focusComment: true });
-  };
-
-  // Handle location press
-  const handleLocationPress = (location) => {
-    navigation.navigate("ExploreTab", {
-      screen: "ExploreMap",
-      params: {
-        focusLocation: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          name: location.name,
-        },
-      },
-    });
-  };
-
-  // Handle user profile press
-  const handleProfilePress = (userId, userName) => {
-    navigation.navigate("UserProfile", { userId, userName });
-  };
-
   // Render post item
   const renderPostItem = ({ item }) => (
     <PostCard
       post={item}
-      onPostPress={() => handlePostPress(item)}
+      onPostPress={() =>
+        navigation.navigate("PostDetails", { postId: item.id })
+      }
       onLikePress={handleLikePress}
-      onCommentPress={() => handleCommentPress(item)}
-      onLocationPress={() => handleLocationPress(item.location)}
-      onProfilePress={() => handleProfilePress(item.userId, item.userName)}
+      onCommentPress={() =>
+        navigation.navigate("PostDetails", {
+          postId: item.id,
+          focusComment: true,
+        })
+      }
+      onLocationPress={() => {
+        if (item.location) {
+          navigation.navigate("Explore", {
+            screen: "ExploreMap",
+            params: { focusLocation: item.location },
+          });
+        }
+      }}
+      onProfilePress={() =>
+        navigation.navigate("UserProfile", {
+          userId: item.userId,
+          userName: item.userName,
+        })
+      }
     />
   );
 

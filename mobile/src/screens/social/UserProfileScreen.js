@@ -10,8 +10,9 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { MaterialIcons } from "@expo/vector-icons";
+import { fetchPosts } from "../../store/slices/socialSlice";
 
 // Components
 import PostCard from "../../components/social/PostCard";
@@ -19,38 +20,40 @@ import PostCard from "../../components/social/PostCard";
 const { width } = Dimensions.get("window");
 
 const UserProfileScreen = ({ route, navigation }) => {
+  const dispatch = useDispatch();
   const { userId, userName } = route.params;
-  const { posts } = useSelector((state) => state.social);
+  const { posts, loading } = useSelector((state) => state.social);
 
   const [userPosts, setUserPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("posts");
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  // Fetch user posts
+  // Make sure posts are loaded
   useEffect(() => {
-    // In a real app, fetch posts by user ID from an API
-    // For now, filter from existing posts
-    setIsLoading(true);
+    if (posts.length === 0) {
+      dispatch(fetchPosts());
+    }
+  }, [dispatch, posts]);
 
-    setTimeout(() => {
-      const filteredPosts = posts.filter((post) => post.userId === userId);
-      setUserPosts(filteredPosts);
-      setIsLoading(false);
-    }, 500);
+  // Fetch user posts when posts change
+  useEffect(() => {
+    setIsLoading(true);
+    // Filter posts by this user
+    const filteredPosts = posts.filter((post) => post.userId === userId);
+    setUserPosts(filteredPosts);
+    setIsLoading(false);
   }, [userId, posts]);
 
-  // Mock user data (in a real app, this would come from an API)
-  const userData = {
-    id: userId,
-    name: userName,
-    avatar:
-      posts.find((post) => post.userId === userId)?.userAvatar ||
-      "https://randomuser.me/api/portraits/men/1.jpg",
-    bio: "Passionate traveler exploring the beauty of Sri Lanka. Sharing my journey and experiences with fellow adventurers.",
-    postsCount: userPosts.length,
-    followersCount: 256,
-    followingCount: 124,
-    isFollowing: false,
+  // Toggle follow status
+  const handleFollowToggle = () => {
+    setIsFollowing(!isFollowing);
+    // In a real app, you would dispatch an action to follow/unfollow the user
+  };
+
+  // Handle post interactions
+  const handleLikePress = (post, isLiked) => {
+    // In a real app, dispatch like/unlike action
   };
 
   // Render post item
@@ -60,7 +63,7 @@ const UserProfileScreen = ({ route, navigation }) => {
       onPostPress={() =>
         navigation.navigate("PostDetails", { postId: item.id })
       }
-      onLikePress={() => {}}
+      onLikePress={handleLikePress}
       onCommentPress={() =>
         navigation.navigate("PostDetails", {
           postId: item.id,
@@ -68,18 +71,14 @@ const UserProfileScreen = ({ route, navigation }) => {
         })
       }
       onLocationPress={() => {
-        navigation.navigate("ExploreTab", {
-          screen: "ExploreMap",
-          params: {
-            focusLocation: {
-              latitude: item.location.latitude,
-              longitude: item.location.longitude,
-              name: item.location.name,
-            },
-          },
-        });
+        if (item.location) {
+          navigation.navigate("Explore", {
+            screen: "ExploreMap",
+            params: { focusLocation: item.location },
+          });
+        }
       }}
-      onProfilePress={() => {}}
+      onProfilePress={() => {}} // No-op since we're already on the profile
     />
   );
 
@@ -103,6 +102,19 @@ const UserProfileScreen = ({ route, navigation }) => {
     </TouchableOpacity>
   );
 
+  // Calculate stats
+  const userStats = {
+    postsCount: userPosts.length,
+    followersCount: 256, // Mock data
+    followingCount: 124, // Mock data
+  };
+
+  // Get user avatar from their posts or use default
+  const userAvatar =
+    userPosts.length > 0
+      ? userPosts[0].userAvatar
+      : "https://randomuser.me/api/portraits/men/1.jpg";
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -112,48 +124,46 @@ const UserProfileScreen = ({ route, navigation }) => {
         >
           <MaterialIcons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{userData.name}</Text>
+        <Text style={styles.headerTitle}>{userName}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.scrollView}>
         <View style={styles.profileSection}>
-          <Image
-            source={{ uri: userData.avatar }}
-            style={styles.profileAvatar}
-          />
+          <Image source={{ uri: userAvatar }} style={styles.profileAvatar} />
 
           <View style={styles.profileStats}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userData.postsCount}</Text>
+              <Text style={styles.statNumber}>{userStats.postsCount}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userData.followersCount}</Text>
+              <Text style={styles.statNumber}>{userStats.followersCount}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userData.followingCount}</Text>
+              <Text style={styles.statNumber}>{userStats.followingCount}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
 
-          <Text style={styles.profileName}>{userData.name}</Text>
-          <Text style={styles.profileBio}>{userData.bio}</Text>
+          <Text style={styles.profileName}>{userName}</Text>
+          <Text style={styles.profileBio}>
+            Travel enthusiast exploring the beauty of Sri Lanka. Sharing my
+            journey and experiences with fellow adventurers.
+          </Text>
 
           <TouchableOpacity
-            style={[
-              styles.followButton,
-              userData.isFollowing && styles.followingButton,
-            ]}
+            style={[styles.followButton, isFollowing && styles.followingButton]}
+            onPress={handleFollowToggle}
           >
             <Text
               style={[
                 styles.followButtonText,
-                userData.isFollowing && styles.followingButtonText,
+                isFollowing && styles.followingButtonText,
               ]}
             >
-              {userData.isFollowing ? "Following" : "Follow"}
+              {isFollowing ? "Following" : "Follow"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -182,7 +192,7 @@ const UserProfileScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {isLoading ? (
+        {isLoading || loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0066cc" />
             <Text style={styles.loadingText}>Loading posts...</Text>

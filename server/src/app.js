@@ -28,6 +28,7 @@ app.use("/api/itineraries", require("./routes/api/itineraries"));
 app.use("/api/bookings", require("./routes/api/bookings"));
 app.use("/api/posts", require("./routes/api/posts"));
 app.use("/api/events", require("./routes/api/events"));
+app.use("/api/comments", require("./routes/api/comments"));
 
 // Basic route for testing
 app.get("/", (req, res) => {

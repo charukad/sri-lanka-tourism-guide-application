@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { createPost } from "../../store/slices/socialSlice";
+import { locations } from "../../data/destinations"; // Reusing locations from destinations for now
 
 const CreatePostScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -24,6 +25,7 @@ const CreatePostScreen = ({ navigation }) => {
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
   const [location, setLocation] = useState(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,15 +83,18 @@ const CreatePostScreen = ({ navigation }) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
+  // Filter locations based on search
+  const filteredLocations = locations.map((loc) => ({
+    id: loc.id,
+    name: loc.name,
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+  }));
+
   // Choose location
-  const chooseLocation = () => {
-    // In a real app, you would navigate to a location picker screen
-    // For now, we'll just set a dummy location
-    navigation.navigate("ChooseLocation", {
-      onLocationSelect: (selectedLocation) => {
-        setLocation(selectedLocation);
-      },
-    });
+  const selectLocation = (selectedLocation) => {
+    setLocation(selectedLocation);
+    setShowLocationPicker(false);
   };
 
   // Add tag
@@ -130,7 +135,6 @@ const CreatePostScreen = ({ navigation }) => {
     try {
       // In a real app, you would upload images and then create the post
       // For now, we'll just use the local URIs
-
       dispatch(
         createPost({
           userId: user?.id || "u1", // In a real app, get this from auth state
@@ -236,6 +240,30 @@ const CreatePostScreen = ({ navigation }) => {
           />
         )}
 
+        {showLocationPicker && (
+          <View style={styles.locationPickerContainer}>
+            <Text style={styles.locationPickerTitle}>Select a Location</Text>
+            <ScrollView style={styles.locationsList} nestedScrollEnabled={true}>
+              {filteredLocations.map((loc) => (
+                <TouchableOpacity
+                  key={loc.id}
+                  style={styles.locationItem}
+                  onPress={() => selectLocation(loc)}
+                >
+                  <MaterialIcons name="place" size={18} color="#0066cc" />
+                  <Text style={styles.locationItemText}>{loc.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeLocationPicker}
+              onPress={() => setShowLocationPicker(false)}
+            >
+              <Text style={styles.closeLocationPickerText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {tags.length > 0 && (
           <View style={styles.tagsContainer}>
             <View style={styles.tagsHeader}>
@@ -296,7 +324,7 @@ const CreatePostScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={chooseLocation}
+            onPress={() => setShowLocationPicker(true)}
           >
             <MaterialIcons name="location-on" size={24} color="#0066cc" />
           </TouchableOpacity>
@@ -404,6 +432,44 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+  },
+  locationPickerContainer: {
+    margin: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#eeeeee",
+    padding: 10,
+  },
+  locationPickerTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  locationsList: {
+    maxHeight: 200,
+  },
+  locationItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  locationItemText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  closeLocationPicker: {
+    alignItems: "center",
+    marginTop: 10,
+    padding: 10,
+  },
+  closeLocationPickerText: {
+    color: "#0066cc",
+    fontWeight: "bold",
   },
   tagsContainer: {
     padding: 15,
