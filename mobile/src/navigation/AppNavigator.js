@@ -6,47 +6,57 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuthStatus } from "../store/slices/authSlice";
 import { loadItineraries } from "../store/slices/itinerarySlice";
+import { fetchGuides } from "../store/slices/guideSlice";
+import { fetchVehicles } from "../store/slices/vehicleSlice";
 
 // Import authentication screens
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
 
-// Import Explore-related screens
+// Import explore and map-related screens
 import ExploreScreen from "../screens/maps/ExploreScreen";
 import DestinationDetailsScreen from "../screens/maps/DestinationDetailsScreen";
 
-// Import Itinerary-related screens
+// Import itinerary-related screens
 import ItinerariesScreen from "../screens/itinerary/ItinerariesScreen";
 import ItineraryDetailsScreen from "../screens/itinerary/ItineraryDetailsScreen";
 import CreateItineraryScreen from "../screens/itinerary/CreateItineraryScreen";
 import AddToItineraryScreen from "../screens/itinerary/AddToItineraryScreen";
 
-// Import other screens
-import ProfileScreen from "../screens/profile/ProfileScreen";
-import EditProfileScreen from "../screens/profile/EditProfileScreen";
+// Import guide-related screens
 import GuidesScreen from "../screens/guides/GuidesScreen";
 import GuideDetailsScreen from "../screens/guides/GuideDetailsScreen";
 import BookGuideScreen from "../screens/guides/BookGuideScreen";
 import MyBookingsScreen from "../screens/guides/MyBookingsScreen";
+
+// Import vehicle-related screens
+import VehiclesScreen from "../screens/vehicles/VehiclesScreen";
+import VehicleDetailsScreen from "../screens/vehicles/VehicleDetailsScreen";
+import BookVehicleScreen from "../screens/vehicles/BookVehicleScreen";
+import MyVehicleBookingsScreen from "../screens/vehicles/MyVehicleBookingsScreen";
+
+// Import profile-related screens
+import ProfileScreen from "../screens/profile/ProfileScreen";
+import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import SettingsScreen from "../screens/profile/SettingsScreen";
 
 // Create navigation containers
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const ExploreStack = createStackNavigator();
 const ItineraryStack = createStackNavigator();
-const ProfileStack = createStackNavigator();
 const GuidesStack = createStackNavigator();
+const VehiclesStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
-// Placeholder component for screens that haven't been built yet
-const PlaceholderScreen = ({ route }) => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <Text style={{ fontSize: 18 }}>Screen: {route.name}</Text>
-    <Text style={{ marginTop: 20, color: "#666" }}>
-      This screen is under development
-    </Text>
-  </View>
-);
+// Helper function to get the current screen name
+const getFocusedRouteNameFromRoute = (route) => {
+  if (route.state && route.state.routeNames) {
+    return route.state.routeNames[route.state.index];
+  }
+  return route.params?.screen || "";
+};
 
 // Nested stack navigator for Explore tab
 const ExploreStackScreen = () => {
@@ -107,12 +117,48 @@ const ItineraryStackScreen = () => {
   );
 };
 
+// Nested stack navigator for Guides tab
+const GuidesStackScreen = () => {
+  return (
+    <GuidesStack.Navigator screenOptions={{ headerShown: false }}>
+      <GuidesStack.Screen name="GuidesList" component={GuidesScreen} />
+      <GuidesStack.Screen name="GuideDetails" component={GuideDetailsScreen} />
+      <GuidesStack.Screen name="BookGuide" component={BookGuideScreen} />
+      <GuidesStack.Screen name="MyBookings" component={MyBookingsScreen} />
+    </GuidesStack.Navigator>
+  );
+};
+
+// Nested stack navigator for Vehicles tab
+const VehiclesStackScreen = () => {
+  return (
+    <VehiclesStack.Navigator screenOptions={{ headerShown: false }}>
+      <VehiclesStack.Screen name="VehiclesList" component={VehiclesScreen} />
+      <VehiclesStack.Screen
+        name="VehicleDetails"
+        component={VehicleDetailsScreen}
+      />
+      <VehiclesStack.Screen name="BookVehicle" component={BookVehicleScreen} />
+      <VehiclesStack.Screen
+        name="MyVehicleBookings"
+        component={MyVehicleBookingsScreen}
+      />
+    </VehiclesStack.Navigator>
+  );
+};
+
 // Nested stack navigator for Profile tab
 const ProfileStackScreen = () => {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} />
+      <ProfileStack.Screen name="MyBookings" component={MyBookingsScreen} />
+      <ProfileStack.Screen
+        name="MyVehicleBookings"
+        component={MyVehicleBookingsScreen}
+      />
     </ProfileStack.Navigator>
   );
 };
@@ -129,10 +175,12 @@ const MainTabNavigator = () => {
             iconName = "explore";
           } else if (route.name === "Itineraries") {
             iconName = "map";
-          } else if (route.name === "Feed") {
-            iconName = "photo-library";
-          } else if (route.name === "Profile") {
+          } else if (route.name === "Guides") {
             iconName = "person";
+          } else if (route.name === "Vehicles") {
+            iconName = "directions-car";
+          } else if (route.name === "Profile") {
+            iconName = "account-circle";
           }
 
           return <MaterialIcons name={iconName} size={size} color={color} />;
@@ -182,14 +230,48 @@ const MainTabNavigator = () => {
           })(route),
         })}
       />
-      <Tab.Screen name="Feed" component={PlaceholderScreen} />
+      <Tab.Screen
+        name="Guides"
+        component={GuidesStackScreen}
+        options={({ route }) => ({
+          tabBarStyle: ((route) => {
+            const routeName = getFocusedRouteNameFromRoute(route) ?? "";
+            const hideOnScreens = ["GuideDetails", "BookGuide", "MyBookings"];
+            return hideOnScreens.includes(routeName)
+              ? { display: "none" }
+              : { height: 60, paddingBottom: 5 };
+          })(route),
+        })}
+      />
+      <Tab.Screen
+        name="Vehicles"
+        component={VehiclesStackScreen}
+        options={({ route }) => ({
+          tabBarStyle: ((route) => {
+            const routeName = getFocusedRouteNameFromRoute(route) ?? "";
+            const hideOnScreens = [
+              "VehicleDetails",
+              "BookVehicle",
+              "MyVehicleBookings",
+            ];
+            return hideOnScreens.includes(routeName)
+              ? { display: "none" }
+              : { height: 60, paddingBottom: 5 };
+          })(route),
+        })}
+      />
       <Tab.Screen
         name="Profile"
         component={ProfileStackScreen}
         options={({ route }) => ({
           tabBarStyle: ((route) => {
             const routeName = getFocusedRouteNameFromRoute(route) ?? "";
-            const hideOnScreens = ["EditProfile"];
+            const hideOnScreens = [
+              "EditProfile",
+              "Settings",
+              "MyBookings",
+              "MyVehicleBookings",
+            ];
             return hideOnScreens.includes(routeName)
               ? { display: "none" }
               : { height: 60, paddingBottom: 5 };
@@ -198,14 +280,6 @@ const MainTabNavigator = () => {
       />
     </Tab.Navigator>
   );
-};
-
-// Helper function to get the current screen name
-const getFocusedRouteNameFromRoute = (route) => {
-  if (route.state && route.state.routeNames) {
-    return route.state.routeNames[route.state.index];
-  }
-  return route.params?.screen || "";
 };
 
 // Auth navigator for non-authenticated users
@@ -226,10 +300,15 @@ const AppNavigator = () => {
     (state) => state.auth
   );
 
-  // Load auth status and itineraries when the app starts
+  // Load important data when the app starts
   useEffect(() => {
+    // Check authentication status
     dispatch(checkAuthStatus());
+
+    // Load other initial data
     dispatch(loadItineraries());
+    dispatch(fetchGuides());
+    dispatch(fetchVehicles());
   }, [dispatch]);
 
   // Show loading screen while checking authentication
@@ -237,6 +316,9 @@ const AppNavigator = () => {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#0066cc" />
+        <Text style={{ marginTop: 15, fontSize: 16, color: "#666" }}>
+          Loading Sri Lanka Tourism Guide...
+        </Text>
       </View>
     );
   }
