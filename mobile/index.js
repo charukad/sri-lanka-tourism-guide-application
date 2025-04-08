@@ -1,3 +1,5 @@
+import { AppRegistry } from 'react-native';
+import App from './App';
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -50,3 +52,5 @@ const persistor = persistStore(store);
 
 export { store, persistor };
 export default store;
+
+AppRegistry.registerComponent('main', () => App);

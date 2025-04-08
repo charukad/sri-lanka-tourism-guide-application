@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../config/api";
 
 // Initial state
 export const initialState = {
@@ -13,9 +13,10 @@ export const getUserProfile = createAsyncThunk(
   "user/getProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/api/users/me");
-      return response.data.data;
+      const response = await api.get("/api/users/me");
+      return response.data;
     } catch (error) {
+      console.error('Get profile error:', error.response?.data || error.message);
       return rejectWithValue(
         error.response?.data?.message || "Failed to get user profile"
       );
@@ -28,9 +29,10 @@ export const updateProfile = createAsyncThunk(
   "user/updateProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const response = await axios.put("/api/users/me", profileData);
-      return response.data.data;
+      const response = await api.put("/api/users/me", profileData);
+      return response.data;
     } catch (error) {
+      console.error('Update profile error:', error.response?.data || error.message);
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
       );
@@ -43,7 +45,7 @@ export const uploadProfilePicture = createAsyncThunk(
   "user/uploadProfilePicture",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/users/profile-picture",
         formData,
         {
@@ -52,8 +54,9 @@ export const uploadProfilePicture = createAsyncThunk(
           },
         }
       );
-      return response.data.data;
+      return response.data;
     } catch (error) {
+      console.error('Upload profile picture error:', error.response?.data || error.message);
       return rejectWithValue(
         error.response?.data?.message || "Failed to upload profile picture"
       );
