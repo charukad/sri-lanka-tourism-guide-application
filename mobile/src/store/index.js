@@ -7,14 +7,17 @@ import { combineReducers } from "redux";
 import authReducer from "./slices/authSlice";
 import userReducer from "./slices/userSlice";
 import itineraryReducer from "./slices/itinerarySlice";
-// Import other reducers as needed
+import guideSlice from "./slices/guideSlice";
+import vehicleSlice from "./slices/vehicleSlice";
+import socialSlice from "./slices/socialSlice";
+import eventSlice from "./slices/eventSlice";
 
 // Configure persistence
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Blacklist any large state slices that you don't want to persist
-  blacklist: [],
+  blacklist: ["events"], // Example: you might not want to persist event data
 };
 
 // Combine all reducers
@@ -22,7 +25,10 @@ const rootReducer = combineReducers({
   auth: authReducer,
   user: userReducer,
   itinerary: itineraryReducer,
-  // Other reducers
+  guides: guideSlice,
+  vehicles: vehicleSlice,
+  social: socialSlice,
+  events: eventSlice,
 });
 
 // Create persisted reducer

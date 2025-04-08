@@ -4,9 +4,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { combineReducers } from "redux";
 
 // Import your reducers
-import authReducer from "./slices/authSlice";
-import userReducer from "./slices/userSlice";
-import itineraryReducer from "./slices/itinerarySlice";
+import authReducer from "./src/store/slices/authSlice";
+import userReducer from "./src/store/slices/userSlice";
+import itineraryReducer from "./src/store/slices/itinerarySlice";
+
 // Import other reducers as needed
 
 // Configure persistence

@@ -10,9 +10,10 @@ import { useFonts } from "expo-font";
 import { customFonts } from "./constants/fonts";
 import "./i18n";
 
-import store, { persistor } from "./store";
+// Import store from the correct path
+import store, { persistor } from "./src/store";
 import AppNavigator from "./navigation/AppNavigator";
-import { checkAuthStatus } from "./store/slices/authSlice";
+import { checkAuthStatus } from "./src/store/slices/authSlice";
 import offlineService from "./services/offlineService";
 import locationService from "./services/locationService";
 import eventService from "./services/eventService";
