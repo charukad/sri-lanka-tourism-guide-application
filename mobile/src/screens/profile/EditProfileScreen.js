@@ -23,7 +23,7 @@ import {
 const EditProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user, loading } = useSelector((state) => state.user);
+  const { profile, loading } = useSelector((state) => state.user);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -32,37 +32,45 @@ const EditProfileScreen = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setUsername(user.username || "");
-      setEmail(user.email || "");
-      setPhoneNumber(user.phone_number || "");
-      setProfilePic(user.profile_pic || null);
+    if (profile) {
+      setUsername(profile.username || "");
+      setEmail(profile.email || "");
+      setPhoneNumber(profile.phone_number || "");
+      setProfilePic(profile.profile_pic || null);
     }
-  }, [user]);
+  }, [profile]);
 
   const pickImage = async () => {
-    // Ask for permission
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      // Ask for permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (status !== "granted") {
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "You need to grant permission to access your photo library"
+        );
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        // Upload profile picture
+        uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
       Alert.alert(
-        "Permission Required",
-        "You need to grant permission to access your photo library"
+        "Error",
+        "Failed to pick image. Please try again."
       );
-      return;
-    }
-
-    // Pick image
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.cancelled && result.uri) {
-      // Upload profile picture
-      uploadImage(result.uri);
     }
   };
 
@@ -84,6 +92,7 @@ const EditProfileScreen = () => {
 
       Alert.alert("Success", "Profile picture updated successfully");
     } catch (error) {
+      console.error('Error uploading image:', error);
       setIsSaving(false);
       Alert.alert("Error", error.message || "Failed to upload profile picture");
     }

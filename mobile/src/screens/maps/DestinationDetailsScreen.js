@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { MaterialIcons } from "@expo/vector-icons";
-import { addDestinationToDay } from "../store/slices/itinerarySlice";
-import { destinations } from "../data/destinations";
+import { addDestinationToDay } from "../../store/slices/itinerarySlice";
+import { destinations } from "../../data/destinations";
 
 const { width } = Dimensions.get("window");
 
