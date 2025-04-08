@@ -1,8 +1,51 @@
-import { registerRootComponent } from 'expo';
+import { configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { combineReducers } from "redux";
 
-import App from './App';
+// Import your reducers
+import authReducer from "./slices/authSlice";
+import userReducer from "./slices/userSlice";
+import itineraryReducer from "./slices/itinerarySlice";
+// Import other reducers as needed
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Configure persistence
+const persistConfig = {
+  key: "root",
+  storage: AsyncStorage,
+  // Blacklist any large state slices that you don't want to persist
+  blacklist: ["someReducerWithTransientData"],
+};
+
+// Combine all reducers
+const rootReducer = combineReducers({
+  auth: authReducer,
+  user: userReducer,
+  itinerary: itineraryReducer,
+  // Other reducers
+});
+
+// Create persisted reducer
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+// Create store with middleware
+const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: ["meta.arg", "payload.timestamp"],
+        // Ignore these paths in the state
+        ignoredPaths: ["items.dates"],
+      },
+    }),
+});
+
+// Create persistor
+const persistor = persistStore(store);
+
+export { store, persistor };
+export default store;

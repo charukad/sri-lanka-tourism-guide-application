@@ -1,28 +1,51 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { combineReducers } from "redux";
-import authReducer from "./slices/authSlice";
-import itineraryReducer from "./slices/itinerarySlice";
-import guideReducer from "./slices/guideSlice";
-import vehicleReducer from "./slices/vehicleSlice";
-import socialReducer from "./slices/socialSlice";
-import eventReducer from "./slices/eventSlice";
 
-// Create the root reducer with our auth and itinerary slices
+// Import reducers
+import authReducer from "./slices/authSlice";
+import userReducer from "./slices/userSlice";
+import itineraryReducer from "./slices/itinerarySlice";
+// Import other reducers as needed
+
+// Configure persistence
+const persistConfig = {
+  key: "root",
+  storage: AsyncStorage,
+  // Blacklist any large state slices that you don't want to persist
+  blacklist: [],
+};
+
+// Combine all reducers
 const rootReducer = combineReducers({
   auth: authReducer,
+  user: userReducer,
   itinerary: itineraryReducer,
-  guides: guideReducer,
-  vehicles: vehicleReducer,
-  social: socialReducer,
-  events: eventReducer,
-
-  // Add other reducers here
+  // Other reducers
 });
 
-export const store = configureStore({
-  reducer: rootReducer,
+// Create persisted reducer
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+// Create store with middleware
+const store = configureStore({
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: ["meta.arg", "payload.timestamp"],
+        // Ignore these paths in the state
+        ignoredPaths: ["items.dates"],
+      },
     }),
 });
+
+// Create persistor
+const persistor = persistStore(store);
+
+export { store, persistor };
+export default store;
